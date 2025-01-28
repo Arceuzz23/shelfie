@@ -297,7 +297,9 @@ class _BookSelectScreenState extends State<BookSelectScreen> {
                     child: const Text(
                       "Create my shelfie", // Button label.
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700, // Bold style for emphasis.
+                        fontFamily: "Canela", // Custom font for the button text.
                         color: Colors.white, // White text for contrast.
                       ),
                     ),

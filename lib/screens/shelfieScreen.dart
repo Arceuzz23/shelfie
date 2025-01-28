@@ -414,7 +414,39 @@ class _ShelfieScreenState extends State<ShelfieScreen> {
           ),
         if (isCapturing)
         // Display a loading overlay when the capturing state is true.
-          LoadingScreen(selectedBooks: widget.selectedBooks,),
+          Positioned.fill(
+            child: Material(
+              child: Container(
+                color: Color(0xff332732),
+                // Background color for the loading overlay.
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      LoadingAnimationWidget.fourRotatingDots(
+                        // Display a loading animation while the screenshot is being processed.
+                        color: Colors.white,
+                        size: 50,
+                      ),
+                       SizedBox(height: 15*heightMultiplier),
+                      // Add spacing below the animation.
+                      const Text(
+                        'Creating Image',
+                        // Display a message to indicate the process of creating an image.
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 30,
+                          fontFamily: 'Canela',
+                        ),
+                        semanticsLabel: 'Creating Image',
+                        // Accessibility label for the text.
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -554,19 +586,19 @@ class LoadingScreen extends StatefulWidget {
 }
 
 class _LoadingScreenState extends State<LoadingScreen> {
-  // Path to the background image that needs to be preloaded
-  final String _backgroundImagePath = 'assets/images/bkg1.jpg';
-
-  /// Preloads the specified background image into memory to ensure smooth transitions.
-  Future<void> preloadImage(BuildContext context) async {
-    final image = AssetImage(_backgroundImagePath);
-    await precacheImage(image, context); // Caches the image to avoid flickering during rendering.
-  }
+  // // Path to the background image that needs to be preloaded
+  // final String _backgroundImagePath = 'assets/images/bkg1.jpg';
+  //
+  // /// Preloads the specified background image into memory to ensure smooth transitions.
+  // Future<void> preloadImage(BuildContext context) async {
+  //   final image = AssetImage(_backgroundImagePath);
+  //   await precacheImage(image, context); // Caches the image to avoid flickering during rendering.
+  // }
 
   @override
   void initState() {
     super.initState();
-    preloadImage(this.context); // Start preloading the image as soon as the widget initializes.
+    //preloadImage(this.context); // Start preloading the image as soon as the widget initializes.
   }
 
   @override
@@ -601,8 +633,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
                             color: Colors.white,
                             fontSize: 30,
                             fontFamily: 'Canela',
-                          ),
-                          semanticsLabel: 'Creating Image', // For accessibility support.
+                          ), // For accessibility support.
                         ),
                       ],
                     ),
