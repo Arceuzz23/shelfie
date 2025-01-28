@@ -532,14 +532,14 @@ Widget buildRack(List<String> tiles, Function(int, int) onReorder,double heightM
           height: 170*heightMultiplier, // Height of the rack background.
           width: 420*widthMultiplier,  // Width of the rack background.
           // Displays the rack image asset.
-          child: Image.asset("assets/images/rack.png", fit: BoxFit.fitWidth),
+          child: Image.asset("assets/images/shelf.png", fit: BoxFit.fitWidth),
         ),
       ),
       // Row widget to display the tiles over the rack image.
       Row(
         children: [
           // Adds spacing to the left side of the tiles.
-          SizedBox(width: 50*widthMultiplier),
+          SizedBox(width: 70*widthMultiplier),
           // Container for the reorderable list of tiles.
           SizedBox(
             height: 160*heightMultiplier, // Height of the list view matching the rack's design.
