@@ -223,10 +223,8 @@ class _BookSelectScreenState extends State<BookSelectScreen> {
                 ),
               SizedBox(height: 16*heightMultiplier),
                 // Adds spacing before the book grid.
-                isLoading
-                    ? const Center(
-                    child: CircularProgressIndicator()) // Displays a loading spinner if data is loading.
-                    : Expanded(
+               // Displays a loading spinner if data is loading.
+                     Expanded(
                   child: filteredBookList.isNotEmpty
                       ? GridView.builder(
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
