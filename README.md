@@ -1,16 +1,69 @@
-# shelfie
+# Shelfie
 
-A new Flutter project.
+Shelfie is a Flutter-based application designed to help users create, organize, and share their personalized bookshelves. The app focuses on providing an intuitive and user-friendly interface to manage your favorite books.
 
-## Getting Started
+## Objective
 
-This project is a starting point for a Flutter application.
+The main goal of this project is to build a functional and visually appealing app where users can:
+1. Select books for their bookshelf.
+2. Organize books on a virtual shelf.
+3. Share their customized bookshelf with others.
 
-A few resources to get you started if this is your first Flutter project:
+## Features
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### **1. Selecting Books for the Bookshelf**
+- Fetch and display a list of books using a provided API.
+- Enable users to search for books by title or author.
+- Allow users to select exactly **6 books** for their bookshelf.
+- Navigate to the next screen while maintaining the selected order of books.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### **2. Organizing the Bookshelf**
+- Display the selected books in two rows, with **3 books per row**.
+- Books are shown front-facing on the shelf.
+- Users can reorganize books by dragging and dropping them.
+- A background image is added for visual enhancement.
+- Basic animations on page load.
+
+### **3. Sharing the Bookshelf**
+- Generate a sharable image of the customized bookshelf (placeholder image if generation is skipped).
+- Provide options to:
+  - Share the bookshelf via **Instagram** and **WhatsApp**.
+  - Download the bookshelf image to the user's device.
+
+## Technologies Used
+- **Flutter** for app development.
+- **Dart** for backend logic and API integration.
+- **REST API** for fetching book data.
+
+## How to Run the App
+
+1. **Clone the Repository**:
+   ```bash
+   git clone https://github.com/Arceuzz23/shelfie.git
+   cd shelfie
+   ```
+
+2. **Install Dependencies**:
+   Ensure you have Flutter installed. Then run:
+   ```bash
+   flutter pub get
+   ```
+
+3. **Run the Application**:
+   Launch the app using an emulator or a connected device:
+   ```bash
+   flutter run
+   ```
+
+## Screenshots
+![image](https://github.com/user-attachments/assets/8f902c28-f2ce-4a59-b4bc-53a4f381bd61)
+![image](https://github.com/user-attachments/assets/cee45bfd-755f-4a28-83b0-32920c03a8b3)
+![image](https://github.com/user-attachments/assets/4db7b18b-cd1f-4603-84a1-998109acbfda)
+
+
+
+
+
+## Contact
+
+For any questions or suggestions, feel free to open an issue or contribute to the project.
