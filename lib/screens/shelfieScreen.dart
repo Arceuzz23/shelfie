@@ -608,7 +608,7 @@ class _LoadingScreenState extends State<LoadingScreen> {
     return Scaffold(
       body: FutureBuilder(
         // Simulate a delay (or replace with actual data fetching if required).
-        future: Future.delayed(Duration(seconds: 3)),
+        future: Future.delayed(Duration(seconds: 5)),
         builder: (context, snapshot) {
           // While the future is still pending, show the loading animation.
           if (snapshot.connectionState == ConnectionState.waiting) {
