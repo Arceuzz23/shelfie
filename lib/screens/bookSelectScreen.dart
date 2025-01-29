@@ -47,38 +47,18 @@ class _BookSelectScreenState extends State<BookSelectScreen> {
   }
 
   Future<void> getSelectedBooks() async {
-    // Iterate through the selected books to map their titles
-    for (int i = 0; i < selectedBooks.length; i++) {
-      selectedBookTitles[i] =
-      bookList[i]['title']; // Assign the title of each book from the book list
-    }
+    selectedBookTitles = []; // Clear previous selections
 
-    print(selectedBookTitles); // Debug: Print the list of selected book titles
-    print(
-        selectedBooks); // Debug: Print the list of selected books (boolean flags or identifiers)
-
-    // Update the `selectedBookTitles` list to retain only the titles of selected books
+    // Collect titles or URLs of selected books
     for (int i = 0; i < selectedBooks.length; i++) {
-      if (selectedBooks[i] != false) {
-        selectedBookTitles[i] =
-        selectedBookTitles[i]; // Retain the title if the book is selected
-      } else {
-        selectedBookTitles[i] =
-        ""; // Clear the title if the book is not selected
+      if (selectedBooks[i]) {
+        selectedBookTitles.add(bookList[i]['cover_url']);
       }
     }
 
-    // Replace book titles with their corresponding cover URLs for selected books
-    for (int i = 0; i < selectedBooks.length; i++) {
-      if (selectedBookTitles[i] == bookList[i]['title']) {
-        selectedBookTitles[i] =
-        bookList[i]['cover_url']; // Replace the title with the cover URL
-      }
-    }
-
-    // Remove any empty strings from the `selectedBookTitles` list to clean up unselected books
-    selectedBookTitles.removeWhere((item) => item.isEmpty);
+    print(selectedBookTitles); // Debug selected book URLs
   }
+
 
   @override
   void initState() {
@@ -91,14 +71,22 @@ class _BookSelectScreenState extends State<BookSelectScreen> {
   }
 
   // Handles book selection logic
-  void handleBookSelection(int index) {
+  void handleBookSelection(int filteredIndex) {
     setState(() {
-      print(selectedBooks);
-      if (selectedBooks[index]) {
-        selectedBooks[index] = false;
-        selectedCount--;
+      // Map filteredIndex to the original bookList index
+      int bookIndex = bookList.indexOf(filteredBookList[filteredIndex]);
+
+      // Toggle selection
+      if (selectedBooks[bookIndex]) {
+        selectedBooks[bookIndex] = false;
+        selectedCount--; // Decrease count
       } else {
-        if (selectedCount >= 6) {
+        // Allow selection only if selectedCount < 6
+        if (selectedCount < 6) {
+          selectedBooks[bookIndex] = true;
+          selectedCount++; // Increase count
+        } else {
+          // Show error message if more than 6 books are selected
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               backgroundColor: Colors.red,
@@ -106,13 +94,12 @@ class _BookSelectScreenState extends State<BookSelectScreen> {
               duration: Duration(seconds: 2),
             ),
           );
-        } else {
-          selectedBooks[index] = true;
-          selectedCount++;
         }
       }
     });
   }
+
+
 
   // Search books based on query
   void searchBooks(String query) {
@@ -239,16 +226,12 @@ class _BookSelectScreenState extends State<BookSelectScreen> {
                       int bookIndex = bookList.indexOf(
                           filteredBookList[index]); // Finds the index of the book in the main list.
                       return BookTile(
-                        imagePath: filteredBookList[index]['cover_url'],
-                        // Passes the book cover URL.
-                        title: filteredBookList[index]['title'],
-                        // Passes the book title.
-                        isSelected: selectedBooks[bookIndex],
-                        // Checks if the book is selected.
-                        onSelected: () =>
-                            handleBookSelection(
-                                bookIndex), // Handles selection toggle.
+                      imagePath: filteredBookList[index]['cover_url'],
+                      title: filteredBookList[index]['title'],
+                      isSelected: selectedBooks[bookList.indexOf(filteredBookList[index])],
+                      onSelected: () => handleBookSelection(index),
                       );
+
                     },
                   )
                       : const Center(
@@ -263,47 +246,43 @@ class _BookSelectScreenState extends State<BookSelectScreen> {
                   // Makes the button stretch to full width.
                   child: FloatingActionButton(
                     onPressed: () async {
-                      await getSelectedBooks(); // Fetches the selected books.
+                      await getSelectedBooks();
+
                       if (selectedCount != 6) {
-                        // Validates if exactly 6 books are selected.
+                        // Show error if selection is not exactly 6
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             backgroundColor: Colors.red,
-                            // Red background for error message.
-                            content: Text(
-                                "You need to select exactly 6 books to proceed."),
-                            // Error message text.
-                            duration: Duration(
-                                seconds: 2), // How long the message is shown.
+                            content: Text("You need to select exactly 6 books to proceed."),
+                            duration: Duration(seconds: 2),
                           ),
                         );
                       } else {
+                        // Navigate to the next screen if exactly 6 books are selected
                         Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (context) =>
-                                LoadingScreen(
-                                    selectedBooks: selectedBookTitles), // Navigates to the loading screen with selected books.
+                                LoadingScreen(selectedBooks: selectedBookTitles),
                           ),
                         );
                       }
                     },
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(
-                          40), // Adds rounded corners to the button.
+                      borderRadius: BorderRadius.circular(40),
                     ),
                     backgroundColor: const Color(0xFF281e28),
-                    // Sets a dark purple color for the button.
                     child: const Text(
-                      "Create my shelfie", // Button label.
+                      "Create my shelfie",
                       style: TextStyle(
                         fontSize: 18,
-                        fontWeight: FontWeight.w700, // Bold style for emphasis.
-                        fontFamily: "Canela", // Custom font for the button text.
-                        color: Colors.white, // White text for contrast.
+                        fontWeight: FontWeight.w700,
+                        fontFamily: "Canela",
+                        color: Colors.white,
                       ),
                     ),
-                  ),
+                  )
+
                 ),
                 SizedBox(height: 10*heightMultiplier),
                 // Adds spacing below the button.

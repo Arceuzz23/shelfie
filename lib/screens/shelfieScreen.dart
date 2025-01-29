@@ -141,8 +141,7 @@ class _ShelfieScreenState extends State<ShelfieScreen> {
             controller: screenshotController,
             child: Stack(
               children: [
-
-                // Background image of the screen
+                //Background image of the screen
                 Container(
                   height: MediaQuery.of(context).size.height,
                   width: MediaQuery.of(context).size.width,
