@@ -56,9 +56,12 @@ The main goal of this project is to build a functional and visually appealing ap
    ```
 
 ## Screenshots
-![image](https://github.com/user-attachments/assets/8f902c28-f2ce-4a59-b4bc-53a4f381bd61)
-![image](https://github.com/user-attachments/assets/cee45bfd-755f-4a28-83b0-32920c03a8b3)
-![image](https://github.com/user-attachments/assets/4db7b18b-cd1f-4603-84a1-998109acbfda)
+![image](https://github.com/user-attachments/assets/8065fcf1-a3eb-4600-83fd-b0aa0439f499)
+![image](https://github.com/user-attachments/assets/636c553d-42eb-4ee5-af04-486e5f9dfe29)
+![image](https://github.com/user-attachments/assets/53a587ca-52fe-4e17-b2ea-4f66399374ce)
+
+
+
 
 
 
