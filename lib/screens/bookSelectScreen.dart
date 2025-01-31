@@ -1,7 +1,14 @@
-import 'dart:convert';
+
+
+
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:shelfie/screens/shelfieScreen.dart';
+import '../models/book_selection_state.dart';
+import '../services/book_service.dart';
+import '../utils/api_exception.dart';
+import '../widgets/book_grid.dart';
+import '../widgets/error_display.dart';
+import '../widgets/loading_screen.dart';
+import '../widgets/search_bar.dart';
 
 class BookSelectScreen extends StatefulWidget {
   const BookSelectScreen({super.key});
@@ -11,245 +18,184 @@ class BookSelectScreen extends StatefulWidget {
 }
 
 class _BookSelectScreenState extends State<BookSelectScreen> {
-  TextEditingController bookSearchController = TextEditingController();
-
-  bool isLoading = false;
-  int selectedCount = 0; // Counter for selected books
-  List<dynamic> bookList = [];
-  List<dynamic> filteredBookList = []; // Holds the filtered list after search
-  List<bool> selectedBooks = []; // Track selection state of books
-  List<String> selectedBookTitles = []; // Track selected book titles
-
-  Future<List<dynamic>?> fetchData() async {
-    String apiUrl = "https://doomscrolling-poc.vercel.app/books/books_list.json";
-    setState(() {
-      isLoading = true;
-    });
-    final response = await http.get(Uri.parse(apiUrl));
-    if (response.statusCode == 200) {
-      var data = json.decode(response.body);
-      var books = data['data']['books'];
-      setState(() {
-        bookList = books; // Update the bookList with fetched data
-        filteredBookList = books; // Set filtered list to all books initially
-        selectedBooks = List.generate(books.length, (
-            index) => false); // Initialize selection state for each book
-        selectedBookTitles = List.generate(
-            books.length, (index) => ""); // Initialize selected book titles
-        isLoading = false;
-      });
-      return books;
-    }
-    setState(() {
-      isLoading = false;
-    });
-    return null;
-  }
-
-  Future<void> getSelectedBooks() async {
-    selectedBookTitles = []; // Clear previous selections
-
-    // Collect titles or URLs of selected books
-    for (int i = 0; i < selectedBooks.length; i++) {
-      if (selectedBooks[i]) {
-        selectedBookTitles.add(bookList[i]['cover_url']);
-      }
-    }
-
-    print(selectedBookTitles); // Debug selected book URLs
-  }
-
+  final TextEditingController _bookSearchController = TextEditingController();
+  final BookService _bookService = BookService();
+  late BookSelectionState _state;
 
   @override
   void initState() {
     super.initState();
-    initializeData(); // Fetch data asynchronously
+    _state = BookSelectionState(
+      bookList: [],
+      filteredBookList: [],
+      selectedBooks: [],
+      selectedBookTitles: [],
+      selectedCount: 0,
+      isLoading: false,
+    );
+    _initializeData();
   }
 
-  void initializeData() async {
-    await fetchData();
-  }
+  Future<void> _initializeData() async {
+    setState(() => _state = _state.copyWith(
+      isLoading: true,
+      errorMessage: null,
+      errorDetails: null,
+    ));
 
-  // Handles book selection logic
-  void handleBookSelection(int filteredIndex) {
-    setState(() {
-      // Map filteredIndex to the original bookList index
-      int bookIndex = bookList.indexOf(filteredBookList[filteredIndex]);
+    try {
+      final books = await _bookService.fetchBooks();
+      final List<Map<String, dynamic>> typedBooks = books.cast<Map<String, dynamic>>().toList();
 
-      // Toggle selection
-      if (selectedBooks[bookIndex]) {
-        selectedBooks[bookIndex] = false;
-        selectedCount--; // Decrease count
-      } else {
-        // Allow selection only if selectedCount < 6
-        if (selectedCount < 6) {
-          selectedBooks[bookIndex] = true;
-          selectedCount++; // Increase count
-        } else {
-          // Show error message if more than 6 books are selected
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              backgroundColor: Colors.red,
-              content: Text("You must select exactly 6 books."),
-              duration: Duration(seconds: 2),
-            ),
+      if (mounted) {
+        setState(() {
+          _state = _state.copyWith(
+            bookList: typedBooks,
+            filteredBookList: typedBooks,
+            selectedBooks: List.generate(typedBooks.length, (index) => false),
+            selectedBookTitles: List.generate(typedBooks.length, (index) => ""),
+            isLoading: false,
           );
-        }
+        });
       }
+    } on ApiException catch (e) {
+      if (mounted) {
+        setState(() {
+          _state = _state.copyWith(
+            isLoading: false,
+            errorMessage: e.message,
+            errorDetails: e.details,
+          );
+        });
+      }
+    }
+  }
+  void _handleBookSelection(int filteredIndex) {
+    final bookIndex = _state.bookList.indexOf(_state.filteredBookList[filteredIndex]);
+    final newSelectedBooks = List<bool>.from(_state.selectedBooks);
+    int newSelectedCount = _state.selectedCount;
+
+    if (newSelectedBooks[bookIndex]) {
+      newSelectedBooks[bookIndex] = false;
+      newSelectedCount--;
+    } else if (newSelectedCount < 6) {
+      newSelectedBooks[bookIndex] = true;
+      newSelectedCount++;
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          backgroundColor: Colors.red,
+          content: Text("You must select exactly 6 books."),
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _state = _state.copyWith(
+        selectedBooks: newSelectedBooks,
+        selectedCount: newSelectedCount,
+      );
     });
   }
 
-
-
-  // Search books based on query
-  void searchBooks(String query) {
+  void _searchBooks(String query) {
     setState(() {
-      filteredBookList = bookList.where((book) {
-        return book['title']
-            .toString()
-            .toLowerCase()
-            .contains(query.toLowerCase());
-      }).toList();
+      _state = _state.copyWith(
+        filteredBookList: _state.bookList.where((book) {
+          return book['title'].toString().toLowerCase().contains(query.toLowerCase());
+        }).toList(),
+      );
     });
+  }
+
+  Future<List<String>> _getSelectedBooks() async {
+    final selectedTitles = <String>[];
+    for (int i = 0; i < _state.selectedBooks.length; i++) {
+      if (_state.selectedBooks[i]) {
+        selectedTitles.add(_state.bookList[i]['cover_url']);
+      }
+    }
+    return selectedTitles;
   }
 
   @override
   Widget build(BuildContext context) {
-    double heightMultiplier = MediaQuery.of(context).size.height/949.3333333333334;
-    double widthMultiplier = MediaQuery.of(context).size.width/448;
+    if (_state.isLoading) {
+      return const Scaffold(
+        backgroundColor: Color(0xFFF5F0EB),
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_state.errorMessage != null) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF5F0EB),
+        body: SafeArea(
+          child: ErrorDisplay(
+            message: _state.errorMessage!,
+            details: _state.errorDetails,
+            onRetry: _initializeData,
+          ),
+        ),
+      );
+    }
     return Scaffold(
       backgroundColor: const Color(0xFFF5F0EB),
-      // Sets a light background color for the screen.
       body: SafeArea(
         child: Center(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            // Adds horizontal padding to the content.
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              // Aligns children to the left.
               children: [
-                SizedBox(
-                  height: 10*heightMultiplier, // Adds vertical spacing.
-                ),
+                const SizedBox(height: 10),
                 IconButton(
-                  iconSize: 40, // Sets the size of the back button icon.
+                  iconSize: 40,
                   style: ButtonStyle(
-                    backgroundColor: WidgetStateProperty.all(Colors
-                        .white), // Gives a white background to the button.
+                    backgroundColor: MaterialStateProperty.all(Colors.white),
                   ),
-                  icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20,
-                      color: Colors.black), // Back arrow icon.
-                  onPressed: () {}, // Defines behavior when the button is pressed.
+                  icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20, color: Colors.black),
+                  onPressed: () => Navigator.pop(context),
                 ),
-                SizedBox(
-                  height: 10*heightMultiplier, // Adds spacing below the back button.
-                ),
+                const SizedBox(height: 10),
                 const Text(
-                  "Let's build your Shelfie!", // Primary heading.
+                  "Let's build your Shelfie!",
                   style: TextStyle(
-                    fontFamily: "Canela", // Custom font for the title.
+                    fontFamily: "Canela",
                     fontSize: 45,
-                    fontWeight: FontWeight.bold, // Bold style for emphasis.
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                 SizedBox(height: 8*heightMultiplier),
-                // Adds spacing below the heading.
+                const SizedBox(height: 8),
                 const Text(
                   "Pick exactly 6 books or TV shows that you love the most to create a Shelfie as unique as you are!",
-                  // Subtitle providing instructions.
                   style: TextStyle(
                     fontSize: 16,
-                    color: Colors.black54, // Lighter color for less emphasis.
+                    color: Colors.black54,
                   ),
                 ),
-                SizedBox(height: 16*heightMultiplier),
-                // Adds spacing before the search bar.
-                TextField(
-                  style: const TextStyle(fontSize: 16),
-                  // Custom text style for the input.
-                  controller: bookSearchController,
-                  // Controller to manage the input text.
-                  onChanged: (value) {
-                    searchBooks(
-                        value); // Calls a function to filter books based on the input value.
-                  },
-                  decoration: InputDecoration(
-                    fillColor: Colors.white,
-                    // Fills the search box with white.
-                    filled: true,
-                    hintText: "Search for books and TV shows",
-                    // Placeholder text inside the search bar.
-                    prefixIcon: const Icon(
-                      Icons.search, // Search icon inside the bar.
-                      size: 35,
-                      color: Colors.black,
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(40),
-                      // Adds rounded corners when focused.
-                      borderSide: const BorderSide(
-                        color: Colors.black, // Black border for focus state.
-                        width: 2,
-                      ),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(40),
-                      // Adds rounded corners by default.
-                      borderSide: const BorderSide(
-                        color: Color(0xFFF5F0EB),
-                        // Matches the background color.
-                        width: 2,
-                      ),
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(
-                          40), // General rounded border.
-                    ),
+                const SizedBox(height: 16),
+                CustomSearchBar(
+                  controller: _bookSearchController,
+                  onSearch: _searchBooks,
+                ),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: BookGrid(
+                    filteredBookList: _state.filteredBookList,
+                    bookList: _state.bookList,
+                    selectedBooks: _state.selectedBooks,
+                    onBookSelected: _handleBookSelection,
                   ),
                 ),
-              SizedBox(height: 16*heightMultiplier),
-                // Adds spacing before the book grid.
-               // Displays a loading spinner if data is loading.
-                     Expanded(
-                  child: filteredBookList.isNotEmpty
-                      ? GridView.builder(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3, // Displays 3 items per row.
-                      crossAxisSpacing: 15, // Spacing between columns.
-                      mainAxisSpacing: 1, // Spacing between rows.
-                      childAspectRatio: 0.6, // Adjusts the size ratio of grid items.
-                    ),
-                    itemCount: filteredBookList.length,
-                    // Number of items to display.
-                    itemBuilder: (context, index) {
-                      int bookIndex = bookList.indexOf(
-                          filteredBookList[index]); // Finds the index of the book in the main list.
-                      return BookTile(
-                      imagePath: filteredBookList[index]['cover_url'],
-                      title: filteredBookList[index]['title'],
-                      isSelected: selectedBooks[bookList.indexOf(filteredBookList[index])],
-                      onSelected: () => handleBookSelection(index),
-                      );
-
-                    },
-                  )
-                      : const Center(
-                    child: Text(
-                        "No books found."), // Displays a message if no books match the search.
-                  ),
-                ),
-                 SizedBox(height: 16*heightMultiplier),
-                // Adds spacing before the submit button.
+                const SizedBox(height: 16),
                 SizedBox(
                   width: double.infinity,
-                  // Makes the button stretch to full width.
                   child: FloatingActionButton(
                     onPressed: () async {
-                      await getSelectedBooks();
-
-                      if (selectedCount != 6) {
-                        // Show error if selection is not exactly 6
+                      if (_state.selectedCount != 6) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             backgroundColor: Colors.red,
@@ -257,17 +203,20 @@ class _BookSelectScreenState extends State<BookSelectScreen> {
                             duration: Duration(seconds: 2),
                           ),
                         );
-                      } else {
-                        // Navigate to the next screen if exactly 6 books are selected
-                        Navigator.push(
+                        return;
+                      }
+
+                      final selectedBooks = await _getSelectedBooks();
+                      if (mounted) {
+                        Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                LoadingScreen(selectedBooks: selectedBookTitles),
+                            builder: (context) => LoadingScreen(selectedBooks: selectedBooks),
                           ),
                         );
                       }
                     },
+
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(40),
                     ),
@@ -281,87 +230,14 @@ class _BookSelectScreenState extends State<BookSelectScreen> {
                         color: Colors.white,
                       ),
                     ),
-                  )
-
+                  ),
                 ),
-                SizedBox(height: 10*heightMultiplier),
-                // Adds spacing below the button.
+                const SizedBox(height: 10),
               ],
             ),
           ),
         ),
       ),
-    );
-  }
-}
-
-
-class BookTile extends StatelessWidget {
-  final String imagePath; // URL for the book or TV show's cover image.
-  final String title; // Title of the book or TV show.
-  final bool isSelected; // Indicates whether this tile is selected or not.
-  final VoidCallback onSelected; // Callback function triggered when the tile is tapped.
-
-  const BookTile({
-    required this.imagePath,
-    required this.title,
-    required this.isSelected,
-    required this.onSelected,
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    double heightMultiplier = MediaQuery.of(context).size.height/949.3333333333334;
-    double widthMultiplier = MediaQuery.of(context).size.width/448;
-    return Column(
-      children: [
-        GestureDetector(
-          onTap: onSelected, // Allows tapping to select or deselect the tile.
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(12.0), // Ensures rounded corners for the image.
-            child: isSelected
-                ? Stack(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(5), // Adds padding inside the container.
-                  height: 180.0*heightMultiplier,
-                  width: 150.0*widthMultiplier,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(12.0), // Matches the corner radius of the tile.
-                    border: Border.all(
-                      color: Colors.green.shade800, // Green border to indicate selection.
-                      width: 4, // Thickness of the selection border.
-                    ),
-                  ),
-                  child: Image.network(
-                    imagePath,
-                    fit: BoxFit.cover, // Ensures the image covers the container without distortion.
-                    height: 160.0*heightMultiplier,
-                    width: 120.0*widthMultiplier,
-                  ),
-                ),
-                Positioned(
-                  top: 8, // Positions the checkmark icon near the top-right corner.
-                  right: 8,
-                  child: Icon(
-                    Icons.check_circle, // Icon to show the selection state.
-                    color: Colors.green.shade100, // Lighter green to contrast with the border.
-                    size: 30, // Size of the checkmark icon.
-                  ),
-                ),
-              ],
-            )
-                : Image.network(
-              imagePath, // Displays the image when the tile is not selected.
-              fit: BoxFit.cover, // Ensures proper scaling of the image.
-              height: 180.0*heightMultiplier,
-              width: 150.0*widthMultiplier,
-            ),
-          ),
-        ),
-       SizedBox(height: 8*heightMultiplier), // Adds spacing below the tile for better visual separation.
-      ],
     );
   }
 }
