@@ -8,8 +8,8 @@ import 'package:shelfie/styles/app_styles.dart';
 import '../widgets/shareScreen_header.dart';
 
 class ShareScreen extends StatefulWidget {
-  final String filePath;
-  final List<String> selectedBooks;
+  final String filePath; // Path of the captured screenshot
+  final List<String> selectedBooks; // List of selected books
 
   const ShareScreen({
     super.key,
@@ -36,18 +36,22 @@ class _ShareScreenState extends State<ShareScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             children: [
+              // Header with back and close actions
               shareScreen_header(
                 onBack: () => _navigateToShelfie(context),
                 onClose: () => _navigateToShelfie(context),
               ),
               SizedBox(height: 50 * heightMultiplier),
+              // Screenshot preview display
               _buildScreenshotPreview(heightMultiplier, widthMultiplier),
               SizedBox(height: 10 * heightMultiplier),
+              // Text asking users to tag the app
               const Text(
                 "Be sure to tag us!",
                 style: ShareScreenStyles.taglineStyle,
               ),
               SizedBox(height: 30 * heightMultiplier),
+              // Share actions for social media sharing
               ShareActions(
                 heightMultiplier: heightMultiplier,
                 widthMultiplier: widthMultiplier,
@@ -59,6 +63,7 @@ class _ShareScreenState extends State<ShareScreen> {
     );
   }
 
+  // Widget to display the screenshot preview
   Widget _buildScreenshotPreview(double heightMultiplier, double widthMultiplier) {
     return SizedBox(
       height: 550 * heightMultiplier,
@@ -67,14 +72,15 @@ class _ShareScreenState extends State<ShareScreen> {
           ? ClipRRect(
         borderRadius: BorderRadius.circular(20),
         child: Image.file(
-          File(widget.filePath),
+          File(widget.filePath), // Display image from the file path
           fit: BoxFit.fill,
         ),
       )
-          : const Text('No screenshot available'),
+          : const Text('No screenshot available'), // Fallback text if no screenshot
     );
   }
 
+  // Navigate back to the ShelfieScreen with the selected books
   void _navigateToShelfie(BuildContext context) {
     Navigator.push(
       context,

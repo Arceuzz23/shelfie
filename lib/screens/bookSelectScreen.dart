@@ -1,6 +1,3 @@
-
-
-
 import 'package:flutter/material.dart';
 import '../models/book_selection_state.dart';
 import '../services/book_service.dart';
@@ -25,6 +22,7 @@ class _BookSelectScreenState extends State<BookSelectScreen> {
   @override
   void initState() {
     super.initState();
+    // Initialize the book selection state with default values
     _state = BookSelectionState(
       bookList: [],
       filteredBookList: [],
@@ -33,9 +31,10 @@ class _BookSelectScreenState extends State<BookSelectScreen> {
       selectedCount: 0,
       isLoading: false,
     );
-    _initializeData();
+    _initializeData(); // Load book data
   }
 
+  // Fetches book data and updates the state
   Future<void> _initializeData() async {
     setState(() => _state = _state.copyWith(
       isLoading: true,
@@ -70,6 +69,8 @@ class _BookSelectScreenState extends State<BookSelectScreen> {
       }
     }
   }
+
+  // Handles book selection, ensuring exactly 6 books can be selected
   void _handleBookSelection(int filteredIndex) {
     final bookIndex = _state.bookList.indexOf(_state.filteredBookList[filteredIndex]);
     final newSelectedBooks = List<bool>.from(_state.selectedBooks);
@@ -82,6 +83,7 @@ class _BookSelectScreenState extends State<BookSelectScreen> {
       newSelectedBooks[bookIndex] = true;
       newSelectedCount++;
     } else {
+      // Limit to selecting only 6 books
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           backgroundColor: Colors.red,
@@ -100,6 +102,7 @@ class _BookSelectScreenState extends State<BookSelectScreen> {
     });
   }
 
+  // Filters books based on the search query
   void _searchBooks(String query) {
     setState(() {
       _state = _state.copyWith(
@@ -110,6 +113,7 @@ class _BookSelectScreenState extends State<BookSelectScreen> {
     });
   }
 
+  // Retrieves the list of selected book covers
   Future<List<String>> _getSelectedBooks() async {
     final selectedTitles = <String>[];
     for (int i = 0; i < _state.selectedBooks.length; i++) {
@@ -122,6 +126,7 @@ class _BookSelectScreenState extends State<BookSelectScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Show a loading screen while fetching data
     if (_state.isLoading) {
       return const Scaffold(
         backgroundColor: Color(0xFFF5F0EB),
@@ -129,6 +134,7 @@ class _BookSelectScreenState extends State<BookSelectScreen> {
       );
     }
 
+    // Display an error message if data loading fails
     if (_state.errorMessage != null) {
       return Scaffold(
         backgroundColor: const Color(0xFFF5F0EB),
@@ -141,6 +147,8 @@ class _BookSelectScreenState extends State<BookSelectScreen> {
         ),
       );
     }
+
+    // Main UI of the screen
     return Scaffold(
       backgroundColor: const Color(0xFFF5F0EB),
       body: SafeArea(
@@ -151,6 +159,7 @@ class _BookSelectScreenState extends State<BookSelectScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 10),
+                // Back button to navigate to the previous screen
                 IconButton(
                   iconSize: 40,
                   style: ButtonStyle(
@@ -177,11 +186,13 @@ class _BookSelectScreenState extends State<BookSelectScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
+                // Search bar for filtering books
                 CustomSearchBar(
                   controller: _bookSearchController,
                   onSearch: _searchBooks,
                 ),
                 const SizedBox(height: 16),
+                // Grid of books displayed
                 Expanded(
                   child: BookGrid(
                     filteredBookList: _state.filteredBookList,
@@ -191,10 +202,12 @@ class _BookSelectScreenState extends State<BookSelectScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
+                // Button to create the Shelfie once 6 books are selected
                 SizedBox(
                   width: double.infinity,
                   child: FloatingActionButton(
                     onPressed: () async {
+                      // Ensure exactly 6 books are selected before proceeding
                       if (_state.selectedCount != 6) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(

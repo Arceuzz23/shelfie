@@ -10,7 +10,6 @@ import '../widgets/editable_text.dart';
 import '../widgets/loading_overlay.dart';
 import 'bookSelectScreen.dart';
 
-
 class ShelfieScreen extends StatefulWidget {
   final List<String> selectedBooks;
 
@@ -27,9 +26,9 @@ class _ShelfieScreenState extends State<ShelfieScreen> {
   late List<String> _topRowBooks;
   late List<String> _bottomRowBooks;
 
-  bool isCapturing = false;
-  bool isEditing = false;
-  bool isEditingTag = false;
+  bool isCapturing = false; // Tracks if screenshot is being captured
+  bool isEditing = false; // Tracks if title is being edited
+  bool isEditingTag = false; // Tracks if tag is being edited
   String tag = ShelfieScreenConstants.defaultTag;
   String text = ShelfieScreenConstants.defaultTitle;
 
@@ -39,11 +38,13 @@ class _ShelfieScreenState extends State<ShelfieScreen> {
     _initializeBooks();
   }
 
+  // Initialize top and bottom rows with selected books
   void _initializeBooks() {
     _topRowBooks = widget.selectedBooks.sublist(0, 3);
     _bottomRowBooks = widget.selectedBooks.sublist(3, 6);
   }
 
+  // Update the order of books in the top row
   void _updateTopRow(int oldIndex, int newIndex) {
     setState(() {
       if (oldIndex < newIndex) newIndex -= 1;
@@ -52,6 +53,7 @@ class _ShelfieScreenState extends State<ShelfieScreen> {
     });
   }
 
+  // Update the order of books in the bottom row
   void _updateBottomRow(int oldIndex, int newIndex) {
     setState(() {
       if (oldIndex < newIndex) newIndex -= 1;
@@ -60,10 +62,9 @@ class _ShelfieScreenState extends State<ShelfieScreen> {
     });
   }
 
-
-
+  // Capture and save the screenshot of the screen
   Future<void> _captureAndSaveScreenshot() async {
-    setState(() => isCapturing = true);
+    setState(() => isCapturing = true); // Show loading overlay
     await Future.delayed(const Duration(milliseconds: 100));
 
     try {
@@ -74,23 +75,24 @@ class _ShelfieScreenState extends State<ShelfieScreen> {
         return;
       }
 
-      // Explicitly create a new Uint8List from bytes
+      // Explicitly create a new Uint8List from captured bytes
       final Uint8List convertedBytes = Uint8List.fromList(bytes);
 
+      // Save the captured image
       final filePath = await ScreenshotHelper.saveImage(convertedBytes, screenshotController);
       if (filePath != null) {
         await ScreenshotHelper.saveScreenshotPath(filePath);
-        _navigateToShareScreen(filePath);
+        _navigateToShareScreen(filePath); // Navigate to share screen
       }
     } catch (error) {
       _showErrorSnackBar("Error capturing screenshot");
       debugPrint(error.toString());
     } finally {
-      setState(() => isCapturing = false);
+      setState(() => isCapturing = false); // Hide loading overlay
     }
   }
 
-
+  // Navigate to the share screen with captured file path
   void _navigateToShareScreen(String filePath) {
     Navigator.push(
       context,
@@ -103,12 +105,14 @@ class _ShelfieScreenState extends State<ShelfieScreen> {
     );
   }
 
+  // Show an error message in the form of a snackbar
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
   }
 
+  // Background widget displaying the image
   Widget _buildBackground() {
     return Container(
       height: MediaQuery.of(context).size.height,
@@ -117,6 +121,7 @@ class _ShelfieScreenState extends State<ShelfieScreen> {
     );
   }
 
+  // Title widget with editable functionality
   Widget _buildTitle(double heightMultiplier, double widthMultiplier) {
     return CustomEditableText(
       text: text,
@@ -131,6 +136,8 @@ class _ShelfieScreenState extends State<ShelfieScreen> {
       }),
     );
   }
+
+  // Tag row with editable functionality for user input
   Widget _buildTagRow(double heightMultiplier, double widthMultiplier) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -155,6 +162,7 @@ class _ShelfieScreenState extends State<ShelfieScreen> {
     );
   }
 
+  // Download button for capturing and saving the screenshot
   Widget _buildDownloadButton(double heightMultiplier, double widthMultiplier) {
     return Visibility(
       visible: !isCapturing,
@@ -176,6 +184,7 @@ class _ShelfieScreenState extends State<ShelfieScreen> {
     );
   }
 
+  // Main content building method
   Widget _buildMainContent(double heightMultiplier, double widthMultiplier) {
     return Scaffold(
       body: Screenshot(
@@ -197,7 +206,7 @@ class _ShelfieScreenState extends State<ShelfieScreen> {
                       MaterialPageRoute(builder: (context) => BookSelectScreen()),
                     ),
                     onCustomize: () {
-                      // Add customization logic
+                      // Add customization logic here if needed
                     },
                     onClose: () => Navigator.push(
                       context,
@@ -247,4 +256,3 @@ class _ShelfieScreenState extends State<ShelfieScreen> {
     );
   }
 }
-
