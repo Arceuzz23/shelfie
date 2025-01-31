@@ -63,7 +63,6 @@ The main goal of this project is to build a functional and visually appealing ap
 
 
 
-
 ## Contact
 
 For any questions or suggestions, feel free to open an issue or contribute to the project.
